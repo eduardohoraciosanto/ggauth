@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 
@@ -17,7 +18,7 @@ class TokenServiceTest {
     private static final Integer accessTokenDurationMins = 2;
     private static final Integer refreshTokenDurationMins = 10;
     private static final String SECRET_KEY = "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6";
-    private static final SecretKey testKey = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+    private static final SecretKey testKey = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
     private static final String TEST_ISSUER = "testIssuer";
     private static final JwtParser tokenParser =
             Jwts.parser().verifyWith(testKey).build();
