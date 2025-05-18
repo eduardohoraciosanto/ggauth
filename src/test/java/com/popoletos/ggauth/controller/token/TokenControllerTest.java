@@ -1,0 +1,71 @@
+package com.popoletos.ggauth.controller.token;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.popoletos.ggauth.model.token.TokenSet;
+import com.popoletos.ggauth.model.token.TokenSetRequest;
+import com.popoletos.ggauth.service.TokenService;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+class TokenControllerTest {
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    private static final String TEST_PLAYER_ID = "testPlayerId";
+
+    @MockitoBean
+    private TokenService tokenService;
+
+    @Test
+    void generateTokenSet() throws Exception {
+
+        when(tokenService.generateTokenSet(TEST_PLAYER_ID))
+                .thenReturn(TokenSet.builder()
+                        .accessToken("someAccessToken")
+                        .refreshToken("someRefreshToken")
+                        .build());
+
+        var tokenSetRequest = TokenSetRequest.builder().playerId(TEST_PLAYER_ID).build();
+
+        var serializedTokenSet = objectMapper.writeValueAsString(tokenSetRequest);
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/token/generate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(serializedTokenSet))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.access_token").value("someAccessToken"));
+    }
+
+    @Test
+    void validateToken_validToken() throws Exception {
+        when(tokenService.validateToken("someToken")).thenReturn(true);
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/token/validate").header("Authorization", "Bearer someToken"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void validateToken_notValidToken() throws Exception {
+        when(tokenService.validateToken("someToken")).thenReturn(false);
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/token/validate").header("Authorization", "Bearer someToken"))
+                .andExpect(status().isUnauthorized());
+    }
+}

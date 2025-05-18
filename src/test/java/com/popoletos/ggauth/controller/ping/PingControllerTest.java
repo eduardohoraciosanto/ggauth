@@ -17,9 +17,6 @@ public class PingControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private PingController pingController;
-
     @Test
     public void testPingEndpoint() throws Exception {
         String expectedVersion = "test";

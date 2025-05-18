@@ -33,10 +33,10 @@ public class TokenService {
 
     public TokenService(
             JwtBuilder jwtBuilder,
-            @Value("${auth.key}") String signingKey,
-            @Value("${auth.issuer}") String issuer,
-            @Value("${auth.access-token-expiration-minutes}") Integer accessTokenDurationMins,
-            @Value("${auth.refresh-token-expiration-minutes}") Integer refreshTokenDurationMins) {
+            @Value("${app.auth.key}") String signingKey,
+            @Value("${app.auth.issuer}") String issuer,
+            @Value("${app.auth.access-token-expiration-minutes}") Integer accessTokenDurationMins,
+            @Value("${app.auth.refresh-token-expiration-minutes}") Integer refreshTokenDurationMins) {
         this.jwtBuilder = jwtBuilder;
         this.signingKey = Keys.hmacShaKeyFor(signingKey.getBytes());
         this.jwtParser = Jwts.parser().verifyWith(this.signingKey).build();
