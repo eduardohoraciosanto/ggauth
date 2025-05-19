@@ -1,5 +1,6 @@
 package com.popoletos.ggauth.service;
 
+import com.popoletos.ggauth.exceptions.InvalidTokenException;
 import com.popoletos.ggauth.model.token.TokenSet;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.JwtException;
@@ -29,21 +30,45 @@ public final class TokenService {
     private final JwtParser jwtParser;
     private final SecretKey signingKey;
     private final String issuer;
-    private final Duration accessTokenValidity;
-    private final Duration refreshTokenValidity;
+    private final Duration userAccessTokenValidity;
+    private final Duration userRefreshTokenValidity;
+    private final Duration appAccessTokenValidity;
+    private final Duration appRefreshTokenValidity;
 
     public TokenService(
             JwtBuilder jwtBuilder,
             @Value("${app.auth.key}") String signingKey,
             @Value("${app.auth.issuer}") String issuer,
-            @Value("${app.auth.access-token-expiration-minutes}") Integer accessTokenDurationMins,
-            @Value("${app.auth.refresh-token-expiration-minutes}") Integer refreshTokenDurationMins) {
+            @Value("${app.auth.user-access-token-expiration-minutes}") Integer userAccessTokenDurationMins,
+            @Value("${app.auth.user-refresh-token-expiration-minutes}") Integer userRefreshTokenDurationMins,
+            @Value("${app.auth.app-access-token-expiration-minutes}") Integer appAccessTokenDurationMins,
+            @Value("${app.auth.app-refresh-token-expiration-minutes}") Integer appRefreshTokenDurationMins) {
         this.jwtBuilder = jwtBuilder;
         this.signingKey = Keys.hmacShaKeyFor(signingKey.getBytes(StandardCharsets.UTF_8));
         this.jwtParser = Jwts.parser().verifyWith(this.signingKey).build();
         this.issuer = issuer;
-        this.accessTokenValidity = Duration.ofMinutes(accessTokenDurationMins);
-        this.refreshTokenValidity = Duration.ofMinutes(refreshTokenDurationMins);
+        this.userAccessTokenValidity = Duration.ofMinutes(userAccessTokenDurationMins);
+        this.userRefreshTokenValidity = Duration.ofMinutes(userRefreshTokenDurationMins);
+        this.appAccessTokenValidity = Duration.ofMinutes(appAccessTokenDurationMins);
+        this.appRefreshTokenValidity = Duration.ofMinutes(appRefreshTokenDurationMins);
+    }
+
+    /**
+     * Generates a token set for the specified app ID. This method creates both an access token and a refresh token
+     * with appropriate expirations based on the current system time plus the defined validity periods for both tokens.
+     *
+     * @param appId the unique identifier od the Application.
+     * @return a {@code TokenSet} containing the generated access token and refresh token.
+     */
+    public TokenSet generateAppTokenSet(String appId) {
+        log.info("Generating token set for app: {}", appId);
+
+        // TODO: Check the app is a known one against a DB
+
+        var accessTokenExpiration = Instant.now().plusSeconds(appAccessTokenValidity.toSeconds());
+        var refreshTokenExpiration = Instant.now().plusSeconds(appRefreshTokenValidity.toSeconds());
+
+        return buildTokenSet(appId, accessTokenExpiration, refreshTokenExpiration);
     }
 
     /**
@@ -53,13 +78,18 @@ public final class TokenService {
      * @param playerId the unique identifier for the player for whom the token set is being generated.
      * @return a {@code TokenSet} containing the generated access token and refresh token.
      */
-    public TokenSet generateTokenSet(String playerId) {
+    public TokenSet generateUserTokenSet(String playerId) {
         log.info("Generating token set for playerId: {}", playerId);
 
-        var accessTokenExpiration = Instant.now().plusSeconds(accessTokenValidity.toSeconds());
-        var refreshTokenExpiration = Instant.now().plusSeconds(refreshTokenValidity.toSeconds());
+        var accessTokenExpiration = Instant.now().plusSeconds(userAccessTokenValidity.toSeconds());
+        var refreshTokenExpiration = Instant.now().plusSeconds(userRefreshTokenValidity.toSeconds());
 
-        var baseBuilder = jwtBuilder.subject(playerId).issuer(issuer).signWith(signingKey);
+        return buildTokenSet(playerId, accessTokenExpiration, refreshTokenExpiration);
+    }
+
+    private TokenSet buildTokenSet(String subject, Instant accessTokenExpiration, Instant refreshTokenExpiration) {
+
+        var baseBuilder = jwtBuilder.subject(subject).issuer(issuer).signWith(signingKey);
 
         var accessToken =
                 baseBuilder.expiration(Date.from(accessTokenExpiration)).compact();
@@ -93,6 +123,19 @@ public final class TokenService {
         } catch (JwtException | IllegalArgumentException e) {
             log.error("Invalid JWT token: {}", e.getMessage(), e);
             return false;
+        }
+    }
+
+    /** <p>Extracts the subject of the token, this applies to both User and App tokens</p>
+     * <p>The token will be parsed and verified in the process</p>
+     * @return The subject (who) from the token
+     * */
+    public String getSubject(String token) {
+        try {
+            return jwtParser.parseSignedClaims(token).getPayload().getSubject();
+        } catch (JwtException | IllegalArgumentException e) {
+            log.error("Invalid JWT token: {}", e.getMessage(), e);
+            throw new InvalidTokenException("Invalid token when extracting subject");
         }
     }
 }

@@ -17,10 +17,10 @@ public class TokenController {
 
     private final TokenService tokenService;
 
-    @PostMapping("/generate")
-    @Counted("controller.token.generate.count")
+    @PostMapping("/generate/player")
+    @Counted("controller.token.generate.player.count")
     public TokenSetResponse generateTokenSet(@RequestBody TokenSetRequest request) {
-        var tokenSet = tokenService.generateTokenSet(request.playerId());
+        var tokenSet = tokenService.generateUserTokenSet(request.playerId());
 
         return TokenSetResponse.builder()
                 .accessToken(tokenSet.accessToken())

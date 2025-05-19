@@ -36,7 +36,7 @@ class TokenControllerTest {
     @Test
     void generateTokenSet() throws Exception {
 
-        when(tokenService.generateTokenSet(TEST_PLAYER_ID))
+        when(tokenService.generateUserTokenSet(TEST_PLAYER_ID))
                 .thenReturn(TokenSet.builder()
                         .accessToken("someAccessToken")
                         .refreshToken("someRefreshToken")
@@ -46,7 +46,7 @@ class TokenControllerTest {
 
         var serializedTokenSet = objectMapper.writeValueAsString(tokenSetRequest);
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/token/generate")
+        mockMvc.perform(MockMvcRequestBuilders.post("/token/generate/player")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(serializedTokenSet))
                 .andExpect(status().isOk())
