@@ -1,8 +1,9 @@
 package com.popoletos.ggauth.controller.token;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.popoletos.ggauth.model.token.ApplicationTokenSetRequest;
 import com.popoletos.ggauth.model.token.TokenSet;
-import com.popoletos.ggauth.model.token.TokenSetRequest;
+import com.popoletos.ggauth.model.token.UserTokenSetRequest;
 import com.popoletos.ggauth.service.TokenService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,11 +31,13 @@ class TokenControllerTest {
 
     private static final String TEST_PLAYER_ID = "testPlayerId";
 
+    private static final String TEST_APP_ID = "testAppId";
+
     @MockitoBean
     private TokenService tokenService;
 
     @Test
-    void generateTokenSet() throws Exception {
+    void generateUserTokenSet() throws Exception {
 
         when(tokenService.generateUserTokenSet(TEST_PLAYER_ID))
                 .thenReturn(TokenSet.builder()
@@ -42,11 +45,33 @@ class TokenControllerTest {
                         .refreshToken("someRefreshToken")
                         .build());
 
-        var tokenSetRequest = TokenSetRequest.builder().playerId(TEST_PLAYER_ID).build();
+        var tokenSetRequest =
+                UserTokenSetRequest.builder().playerId(TEST_PLAYER_ID).build();
 
         var serializedTokenSet = objectMapper.writeValueAsString(tokenSetRequest);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/token/generate/player")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(serializedTokenSet))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.access_token").value("someAccessToken"));
+    }
+
+    @Test
+    void generateApplicationTokenSet() throws Exception {
+
+        when(tokenService.generateAppTokenSet(TEST_APP_ID))
+                .thenReturn(TokenSet.builder()
+                        .accessToken("someAccessToken")
+                        .refreshToken("someRefreshToken")
+                        .build());
+
+        var tokenSetRequest =
+                ApplicationTokenSetRequest.builder().applicationId(TEST_APP_ID).build();
+
+        var serializedTokenSet = objectMapper.writeValueAsString(tokenSetRequest);
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/token/generate/application")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(serializedTokenSet))
                 .andExpect(status().isOk())
