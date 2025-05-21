@@ -56,7 +56,6 @@ class TokenControllerTest {
                 .andExpect(jsonPath("$.access_token").value("someAccessToken"));
     }
 
-    /*
     @Test
     void generateApplicationTokenSet() throws Exception {
 
@@ -71,7 +70,6 @@ class TokenControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.access_token").value("someAccessToken"));
     }
-    */
 
     @Test
     void validateToken_validToken() throws Exception {
