@@ -32,12 +32,15 @@ class TokenControllerTest {
 
     private static final String TEST_APP_ID = "testAppId";
 
+    private static final String TEST_APP_TOKEN = "testAppToken";
+
     @MockitoBean
     private TokenService tokenService;
 
     @Test
     void generateUserTokenSet() throws Exception {
-
+        when(tokenService.validateToken(TEST_APP_TOKEN)).thenReturn(true);
+        when(tokenService.getSubject(TEST_APP_TOKEN)).thenReturn(TEST_APP_ID);
         when(tokenService.generateUserTokenSet(TEST_PLAYER_ID))
                 .thenReturn(TokenSet.builder()
                         .accessToken("someAccessToken")
@@ -50,6 +53,7 @@ class TokenControllerTest {
         var serializedTokenSet = objectMapper.writeValueAsString(tokenSetRequest);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/token/generate/player")
+                        .header("Authorization", "Bearer "+TEST_APP_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(serializedTokenSet))
                 .andExpect(status().isOk())

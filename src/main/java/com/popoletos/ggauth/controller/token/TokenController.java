@@ -1,6 +1,7 @@
 package com.popoletos.ggauth.controller.token;
 
 import annotations.RequiresApplicationId;
+import com.popoletos.ggauth.annotations.RequiresApplicationToken;
 import com.popoletos.ggauth.exceptions.InvalidTokenException;
 import com.popoletos.ggauth.model.token.TokenSetResponse;
 import com.popoletos.ggauth.model.token.UserTokenSetRequest;
@@ -20,6 +21,7 @@ public class TokenController {
 
     @PostMapping("/generate/player")
     @Counted("controller.token.generate.player.count")
+    @RequiresApplicationToken
     public TokenSetResponse generateUserTokenSet(@RequestBody UserTokenSetRequest request) {
         var tokenSet = tokenService.generateUserTokenSet(request.playerId());
 

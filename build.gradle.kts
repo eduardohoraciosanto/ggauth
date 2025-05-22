@@ -42,6 +42,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("io.micrometer:micrometer-core")
     implementation("io.micrometer:micrometer-registry-prometheus")
+    implementation("org.springframework:spring-webmvc")
 
     implementation(project(":ggauth-annotations-processor"))
     annotationProcessor(project(":ggauth-annotations-processor"))
