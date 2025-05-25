@@ -5,6 +5,7 @@ import com.popoletos.ggauth.annotations.RequiresApplicationToken;
 import com.popoletos.ggauth.exceptions.InvalidTokenException;
 import com.popoletos.ggauth.model.token.TokenSetResponse;
 import com.popoletos.ggauth.model.token.UserTokenSetRequest;
+import com.popoletos.ggauth.ratelimit.RateLimit;
 import com.popoletos.ggauth.service.TokenService;
 import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
@@ -22,6 +23,7 @@ public class TokenController {
     @PostMapping("/generate/player")
     @Counted("controller.token.generate.player.count")
     @RequiresApplicationToken
+    @RateLimit(tier = "APPLICATION")
     public TokenSetResponse generateUserTokenSet(@RequestBody UserTokenSetRequest request) {
         var tokenSet = tokenService.generateUserTokenSet(request.playerId());
 
@@ -34,6 +36,7 @@ public class TokenController {
     @PostMapping("/generate/application")
     @Counted("controller.token.generate.application.count")
     @RequiresApplicationId
+    @RateLimit(tier = "APPLICATION")
     public TokenSetResponse generateApplicationTokenSet(@RequestHeader("Application-Id") String appId) {
         var tokenSet = tokenService.generateAppTokenSet(appId);
 
@@ -45,6 +48,7 @@ public class TokenController {
 
     @PostMapping("/validate")
     @Counted("controller.token.validate.count")
+    @RateLimit(tier = "TOKEN")
     public void validateToken(@RequestHeader("Authorization") String authHeader) {
         var token = authHeader.replace("Bearer ", "");
 

@@ -27,6 +27,9 @@ public class ApplicationIdInterceptor implements HandlerInterceptor {
                     log.info("Application id is {}", applicationId);
                     return true;
                 }
+                log.error(
+                        "Unable to find application id for {}",
+                        handlerMethod.getMethod().getName());
                 response.sendError(HttpServletResponse.SC_FORBIDDEN);
                 return false;
             }
