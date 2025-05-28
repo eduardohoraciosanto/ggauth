@@ -1,6 +1,8 @@
 package com.popoletos.ggauth.service;
 
+import com.popoletos.ggauth.annotations.ToMDC;
 import com.popoletos.ggauth.exceptions.InvalidTokenException;
+import com.popoletos.ggauth.mdc.MdcKeys;
 import com.popoletos.ggauth.model.token.TokenSet;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.JwtException;
@@ -25,7 +27,7 @@ import java.util.Date;
  */
 @Service
 @Slf4j
-public final class TokenService {
+public class TokenService {
     private final JwtBuilder jwtBuilder;
     private final JwtParser jwtParser;
     private final SecretKey signingKey;
@@ -60,7 +62,7 @@ public final class TokenService {
      * @param appId the unique identifier od the Application.
      * @return a {@code TokenSet} containing the generated access token and refresh token.
      */
-    public TokenSet generateAppTokenSet(String appId) {
+    public TokenSet generateAppTokenSet(@ToMDC(MdcKeys.APPLICATION_ID) String appId) {
         log.info("Generating token set for app: {}", appId);
 
         // TODO: Check the app is a known one against a DB
@@ -78,7 +80,7 @@ public final class TokenService {
      * @param playerId the unique identifier for the player for whom the token set is being generated.
      * @return a {@code TokenSet} containing the generated access token and refresh token.
      */
-    public TokenSet generateUserTokenSet(String playerId) {
+    public TokenSet generateUserTokenSet(@ToMDC(MdcKeys.PLAYER_ID) String playerId) {
         log.info("Generating token set for playerId: {}", playerId);
 
         var accessTokenExpiration = Instant.now().plusSeconds(userAccessTokenValidity.toSeconds());
@@ -87,7 +89,8 @@ public final class TokenService {
         return buildTokenSet(playerId, accessTokenExpiration, refreshTokenExpiration);
     }
 
-    private TokenSet buildTokenSet(String subject, Instant accessTokenExpiration, Instant refreshTokenExpiration) {
+    private TokenSet buildTokenSet(
+            @ToMDC(MdcKeys.SUBJECT) String subject, Instant accessTokenExpiration, Instant refreshTokenExpiration) {
 
         var baseBuilder = jwtBuilder.subject(subject).issuer(issuer).signWith(signingKey);
 
@@ -96,6 +99,8 @@ public final class TokenService {
 
         var refreshToken =
                 baseBuilder.expiration(Date.from(refreshTokenExpiration)).compact();
+
+        log.info("Token built for subject {}", subject);
 
         return TokenSet.builder()
                 .accessToken(accessToken)

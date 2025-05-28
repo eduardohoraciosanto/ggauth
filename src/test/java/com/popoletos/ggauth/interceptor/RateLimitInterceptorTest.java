@@ -33,7 +33,7 @@ class RateLimitInterceptorTest {
     }
 
     static class MockController {
-        @RateLimit(tier = "APPLICATION", operationCost = 2)
+        @RateLimit(tier = RateLimitTiers.APPLICATION, operationCost = 2)
         public void limitedMethod() {}
 
         public void openMethod() {}

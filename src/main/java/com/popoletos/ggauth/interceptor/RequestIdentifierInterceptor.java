@@ -1,7 +1,9 @@
 package com.popoletos.ggauth.interceptor;
 
+import com.popoletos.ggauth.mdc.MdcKeys;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -32,8 +34,11 @@ public class RequestIdentifierInterceptor implements HandlerInterceptor {
         response.setHeader("X-Request-Id", requestId);
         // save request-id in the request attributes
         request.setAttribute(REQUEST_ID, requestId);
+        MDC.put(MdcKeys.X_REQUEST_ID.name(), requestId);
         // save the requester-id in the attributes
-        request.setAttribute(REQUESTER_ID, getClientId(request));
+        var clientId = getClientId(request);
+        request.setAttribute(REQUESTER_ID, clientId);
+        MDC.put(MdcKeys.REQUESTER_ID.name(), clientId);
         return true;
     }
 

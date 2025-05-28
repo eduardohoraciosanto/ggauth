@@ -29,7 +29,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         if (handler instanceof HandlerMethod handlerMethod) {
             var annotation = AnnotationUtils.findAnnotation(handlerMethod.getMethod(), RateLimit.class);
             if (annotation != null) {
-                var tier = RateLimitTiers.valueOf(annotation.tier());
+                var tier = annotation.tier();
                 log.info("Applying {} RateLimit for requesterId={}", tier, requesterId);
                 if (rateLimitService.tryConsumeToken(tier, requesterId, annotation.operationCost())) {
                     log.info("known requesterId={} allowed", requesterId);

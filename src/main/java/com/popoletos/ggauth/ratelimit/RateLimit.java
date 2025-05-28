@@ -27,7 +27,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD, ElementType.TYPE})
 public @interface RateLimit {
-    String tier() default "GLOBAL";
+    RateLimitTiers tier() default RateLimitTiers.GLOBAL;
 
     int operationCost() default 1;
 }
