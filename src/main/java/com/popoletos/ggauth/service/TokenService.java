@@ -55,6 +55,12 @@ public class TokenService {
         this.appRefreshTokenValidity = Duration.ofMinutes(appRefreshTokenDurationMins);
     }
 
+    @Override
+    protected final void finalize() {
+        // Do nothing, this only serves to avoid Finalizer attacks due to our constructor being able to throw
+        // we cannot mark the class final since we need to mock it
+    }
+
     /**
      * Generates a token set for the specified app ID. This method creates both an access token and a refresh token
      * with appropriate expirations based on the current system time plus the defined validity periods for both tokens.
